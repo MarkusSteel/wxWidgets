@@ -2867,7 +2867,7 @@ wxSize wxWindowBase::GetDPI() const
     return wxDisplay(static_cast<const wxWindow*>(this)).GetPPI();
 }
 
-#ifndef wxHAVE_DPI_INDEPENDENT_PIXELS
+#ifndef wxHAS_DPI_INDEPENDENT_PIXELS
 
 namespace
 {
@@ -2910,7 +2910,7 @@ wxWindowBase::ToDIP(const wxSize& sz, const wxWindowBase* w)
     return wxRescaleCoord(sz).From(dpi).To(baseline);
 }
 
-#endif // !wxHAVE_DPI_INDEPENDENT_PIXELS
+#endif // !wxHAS_DPI_INDEPENDENT_PIXELS
 
 // Windows' computes dialog units using average character width over upper-
 // and lower-case ASCII alphabet and not using the average character width
@@ -3383,7 +3383,7 @@ static void DoNotifyWindowAboutCaptureLost(wxWindow *win)
     {
         // windows must handle this event, otherwise the app wouldn't behave
         // correctly if it loses capture unexpectedly; see the discussion here:
-        // https://trac.wxwidgets.org/ticket/2277
+        // https://github.com/wxWidgets/wxWidgets/issues/21642
         // http://article.gmane.org/gmane.comp.lib.wxwidgets.devel/82376
         wxFAIL_MSG( wxT("window that captured the mouse didn't process wxEVT_MOUSE_CAPTURE_LOST") );
     }
