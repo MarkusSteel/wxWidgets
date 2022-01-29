@@ -166,6 +166,23 @@ digraph Pixels
 @enddot
 
 
+Almost all functions in wxWidgets API take and return values expressed in
+logical pixels. With the obvious exceptions of the functions that explicitly
+use "Logical", "Physical" or "DIP" in their names, the only exceptions are:
+
+- Size passed to wxBitmap constructors taking one, as well as the size returned
+  by wxBitmap::GetWidth() and wxBitmap::GetHeight() is in physical pixels. You
+  can use wxBitmap::CreateWithLogicalSize() and wxBitmap::GetLogicalWidth(),
+  wxBitmap::GetLogicalHeight() and wxBitmap::GetLogicalSize() to use or get the
+  size in logical pixels which must be used in any computations involving the
+  sizes expressed in logical units.
+- Similarly, the size returned by wxBitmapBundle::GetPreferredBitmapSizeFor()
+  is in physical pixels, but wxBitmapBundle::GetPreferredLogicalSizeFor() can
+  be used to retrieve the same value in logical units.
+- The default size of wxBitmapBundle, taken by wxBitmapBundle::FromSVG() and
+  returned by wxBitmapBundle::GetDefaultSize() is in DIPs.
+
+
 High-Resolution Images and Artwork  {#high_dpi_artwork}
 ==================================
 
@@ -207,7 +224,7 @@ used rather than having to construct a vector from them:
 wxBitmap normal(32, 32);
 wxBitmap highDPI(64, 64);
 ... initialize the bitmaps somehow ...
-wxBitmapBundle bundle = wxBitmapBundle::FromBitmaps(normal, bitmap);
+wxBitmapBundle bundle = wxBitmapBundle::FromBitmaps(normal, highDPI);
 
 // Now the bundle can be passed to any wxWidgets control using bitmaps.
 ~~~
