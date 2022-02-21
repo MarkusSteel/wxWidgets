@@ -346,9 +346,14 @@ void wxGDIImage::SetScaleFactor(double scale)
 {
     wxCHECK_RET( IsOk(), wxT("invalid bitmap") );
 
-    AllocExclusive();
+    if ( GetGDIImageData()->m_scaleFactor != scale )
+    {
+        AllocExclusive();
 
-    GetGDIImageData()->m_scaleFactor = scale;
+        // Note that GetGDIImageData() result may have changed after calling
+        // AllocExclusive(), so don't be tempted to optimize it.
+        GetGDIImageData()->m_scaleFactor = scale;
+    }
 }
 
 double wxGDIImage::GetScaleFactor() const

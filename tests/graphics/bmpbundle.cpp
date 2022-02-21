@@ -14,6 +14,8 @@
 
 #include "wx/bmpbndl.h"
 
+#include "wx/artprov.h"
+
 #include "asserthelper.h"
 
 // ----------------------------------------------------------------------------
@@ -138,9 +140,60 @@ TEST_CASE("BitmapBundle::FromSVG", "[bmpbundle][svg]")
 
 TEST_CASE("BitmapBundle::FromSVGFile", "[bmpbundle][svg][file]")
 {
-    wxBitmapBundle b = wxBitmapBundle::FromSVGFile("horse.svg", wxSize(20, 20));
+    const wxSize size(20, 20); // completely arbitrary
+
+    CHECK( !wxBitmapBundle::FromSVGFile("horse.bmp", size).IsOk() );
+
+    wxBitmapBundle b = wxBitmapBundle::FromSVGFile("horse.svg", size);
     REQUIRE( b.IsOk() );
-    CHECK( b.GetDefaultSize() == wxSize(20, 20) );
+    CHECK( b.GetDefaultSize() == size );
 }
 
 #endif // wxHAS_SVG
+
+TEST_CASE("BitmapBundle::ArtProvider", "[bmpbundle][art]")
+{
+    // Check that creating a bogus bundle fails as expected.
+    wxBitmapBundle b = wxArtProvider::GetBitmapBundle("bloordyblop");
+    CHECK( !b.IsOk() );
+
+    // And that creating a bundle using a standard icon works.
+    const wxSize size(16, 16);
+    b = wxArtProvider::GetBitmapBundle(wxART_INFORMATION, wxART_MENU, size);
+    CHECK( b.IsOk() );
+    CHECK( b.GetDefaultSize() == size );
+}
+
+// This test only makes sense for the ports that actually support scaled
+// bitmaps, which is the case for the ports using real logical pixels (they
+// have to support bitmap scale for things to work) and MSW, which doesn't, but
+// still implements support for at least storing and retrieving bitmap scale in
+// its wxBitmap.
+#if defined(wxHAS_DPI_INDEPENDENT_PIXELS) || defined(__WXMSW__)
+
+TEST_CASE("BitmapBundle::Scale", "[bmpbundle][scale]")
+{
+    // This is not a wxBitmapBundle test, strictly speaking, but check that
+    // setting scale factor works correctly for bitmaps, as wxBitmapBundle does
+    // this internally.
+    wxBitmap bmp;
+    bmp.CreateWithDIPSize(8, 8, 2);
+#ifdef wxHAS_DPI_INDEPENDENT_PIXELS
+    CHECK( bmp.GetLogicalSize() == wxSize(8, 8) );
+#endif
+    CHECK( bmp.GetDIPSize() == wxSize(8, 8) );
+    CHECK( bmp.GetSize() == wxSize(16, 16) );
+    CHECK( bmp.GetScaleFactor() == 2 );
+
+    wxBitmap bmp2(bmp);
+    bmp.SetScaleFactor(3);
+    CHECK( bmp2.GetScaleFactor() == 2 );
+    CHECK( bmp.GetScaleFactor() == 3 );
+
+    // Check that creating bitmap bundle from a bitmap with a scale factor
+    // works as expected.
+    wxBitmapBundle b = bmp2;
+    CHECK( b.GetDefaultSize() == wxSize(8, 8) );
+}
+
+#endif // ports with scaled bitmaps support

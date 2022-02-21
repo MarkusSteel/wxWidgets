@@ -4621,7 +4621,7 @@ void wxPropertyGrid::OnResize( wxSizeEvent& event )
             int w = wxMax(width, 250);
             int h = wxMax(height + dblh, 400);
             m_doubleBuffer = new wxBitmap;
-            m_doubleBuffer->CreateWithLogicalSize( w, h, scaleFactor );
+            m_doubleBuffer->CreateWithDIPSize( w, h, scaleFactor );
         }
         else
         {
@@ -4635,7 +4635,7 @@ void wxPropertyGrid::OnResize( wxSizeEvent& event )
                 if ( h < (height+dblh) ) h = height + dblh;
                 delete m_doubleBuffer;
                 m_doubleBuffer = new wxBitmap;
-                m_doubleBuffer->CreateWithLogicalSize( w, h, scaleFactor );
+                m_doubleBuffer->CreateWithDIPSize( w, h, scaleFactor );
             }
         }
     }
@@ -5101,7 +5101,7 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
                             imageWidth = bmp.GetWidth();
                             int hMax = m_lineHeight - wxPG_CUSTOM_IMAGE_SPACINGY - 1;
                             if ( bmp.GetHeight() > hMax )
-                                imageWidth *= (double)hMax / bmp.GetHeight();
+                                imageWidth = int(double(imageWidth) * hMax / bmp.GetHeight());
                         }
 
                         if ( m_colHover == 0 )
@@ -5618,7 +5618,7 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
     // Handles key event when editor control is not focused.
     //
 
-    wxCHECK2(!IsFrozen(), return);
+    wxCHECK_RET(!IsFrozen(), "wxPropertyGrid shouldn't be frozen");
 
     // Traversal between items, collapsing/expanding, etc.
     wxPGProperty* selected = GetSelection();
