@@ -334,8 +334,8 @@ public:
 
     wxPGCommonValue( const wxString& label, wxPGCellRenderer* renderer )
         : m_label(label)
+        , m_renderer(renderer)
     {
-        m_renderer = renderer;
         renderer->IncRef();
     }
     virtual ~wxPGCommonValue()
@@ -408,9 +408,9 @@ class WXDLLIMPEXP_PROPGRID wxPGValidationInfo
     friend class wxPropertyGrid;
 public:
     wxPGValidationInfo()
+        : m_failureBehavior(0)
+        , m_isFailing(false)
     {
-        m_failureBehavior = 0;
-        m_isFailing = false;
     }
 
     ~wxPGValidationInfo()
@@ -1313,7 +1313,7 @@ public:
 
     // Returns true if given event is from first of an array of buttons
     // (as can be in case when wxPGMultiButton is used).
-    bool IsMainButtonEvent( const wxEvent& event )
+    bool IsMainButtonEvent( const wxEvent& event ) const
     {
         return (event.GetEventType() == wxEVT_BUTTON)
                     && (m_wndSecId == event.GetId());
@@ -1460,10 +1460,10 @@ protected:
     virtual void DoEnable(bool enable) wxOVERRIDE;
 
 #ifndef wxPG_ICON_WIDTH
-    wxBitmap            *m_expandbmp, *m_collbmp;
+    wxBitmap            m_expandbmp, m_collbmp;
 #endif
 
-    wxCursor            *m_cursorSizeWE;
+    wxCursor            m_cursorSizeWE;
 
     // wxWindow pointers to editor control(s).
     wxWindow            *m_wndEditor;
@@ -1839,7 +1839,7 @@ protected:
         return KeyEventToActions(event, NULL);
     }
 
-    void ImprovedClientToScreen( int* px, int* py );
+    void ImprovedClientToScreen( int* px, int* py ) const;
 
     // Called by focus event handlers. newFocused is the window that becomes
     // focused.
