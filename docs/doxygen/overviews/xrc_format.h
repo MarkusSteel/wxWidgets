@@ -893,6 +893,17 @@ Example:
 @hdr3col{property, type, description}
 @row3col{bitmap, @ref overview_xrcformat_type_bitmap,
      Label to display on the button (default: none).}
+@row3col{pressed, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is pressed (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{focus, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button has focus (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{disabled, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is disabled (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{current, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the mouse cursor hovers above the bitmap (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{margins, @ref overview_xrcformat_type_size,
+    Set the margins between the bitmap and the text of the button.
+    This method is currently only implemented under MSW. If it is not called, a default margin is used around the bitmap. @since 3.1.7}
 @row3col{checked, @ref overview_xrcformat_type_bool,
      Should the button be checked/pressed initially (default: 0)?}
 @endTable
@@ -935,8 +946,10 @@ No additional properties.
 @hdr3col{property, type, description}
 @row3col{label, @ref overview_xrcformat_type_text,
      Label to use for the checkbox (default: empty).}
-@row3col{checked, @ref overview_xrcformat_type_bool,
-     Should the checkbox be checked initially (default: 0)?}
+@row3col{checked, integer,
+    Sets the initial state of the checkbox. 0 is unchecked (default),
+    1 is checked, and since wxWidgets 3.1.7, 2 sets the undetermined
+    state of a 3-state checkbox.}
 @endTable
 
 
@@ -1025,27 +1038,6 @@ its @c notebookpage).
 Each @c choicebookpage has exactly one non-toplevel window as its child.
 
 
-@subsubsection xrc_wxcommandlinkbutton wxCommandLinkButton
-
-The wxCommandLinkButton contains a main title-like @c label and an optional
-@c note for longer description. The main @c label and the @c note can be
-concatenated into a single string using a new line character between them
-(notice that the @c note part can have more new lines in it).
-
-@beginTable
-@hdr3col{property, type, description}
-@row3col{label, @ref overview_xrcformat_type_text,
-    First line of text on the button, typically the label of an action that
-    will be made when the button is pressed (default: empty). }
-@row3col{note, @ref overview_xrcformat_type_text,
-    Second line of text describing the action performed when the button is pressed (default: none).  }
-@row3col{bitmap, @ref overview_xrcformat_type_bitmap,
-    Bitmap to display in the button (optional). @since 3.1.5}
-@row3col{default, @ref overview_xrcformat_type_bool,
-    Should this button be the default button in dialog (default: 0)? @since 3.1.5}
-@endTable
-
-
 @subsubsection xrc_wxcollapsiblepane wxCollapsiblePane
 
 @beginTable
@@ -1110,6 +1102,35 @@ Example:
 @hdr3col{property, type, description}
 @row3col{value, @ref overview_xrcformat_type_string,
      Initial value in the control (default: empty).}
+@endTable
+
+
+@subsubsection xrc_wxcommandlinkbutton wxCommandLinkButton
+
+The wxCommandLinkButton contains a main title-like @c label and an optional
+@c note for longer description. The main @c label and the @c note can be
+concatenated into a single string using a new line character between them
+(notice that the @c note part can have more new lines in it).
+
+@beginTable
+@hdr3col{property, type, description}
+@row3col{label, @ref overview_xrcformat_type_text,
+    First line of text on the button, typically the label of an action that
+    will be made when the button is pressed (default: empty). }
+@row3col{note, @ref overview_xrcformat_type_text,
+    Second line of text describing the action performed when the button is pressed (default: none).  }
+@row3col{bitmap, @ref overview_xrcformat_type_bitmap,
+    Bitmap to display in the button (optional). @since 3.1.5}
+@row3col{pressed, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is pressed (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{focus, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button has focus (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{disabled, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is disabled (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{current, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the mouse cursor hovers above the bitmap (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{default, @ref overview_xrcformat_type_bool,
+    Should this button be the default button in dialog (default: 0)? @since 3.1.5}
 @endTable
 
 
@@ -1930,19 +1951,17 @@ a single wxSizer child with non-ribbon windows in it.
 @hdr3col{property, type, description}
 @row3col{value, @ref overview_xrcformat_type_text,
     Initial value of the control (default: empty).}
-@row3col{maxlength, integer,
-    Maximum length of the text entered (default: unlimited).}
 @endTable
 
-Notice that wxRichTextCtrl support in XRC is available in wxWidgets 2.9.5 and
-later only and you need to explicitly register its handler using
+Notice that you need to explicitly register the handler using
 @code
     #include <wx/xrc/xh_richtext.h>
 
-    AddHandler(new wxRichTextCtrl);
+    AddHandler(new wxRichTextCtrlXmlHandler);
 @endcode
 to use it.
 
+@since 2.9.5
 
 @subsubsection xrc_wxscrollbar wxScrollBar
 
@@ -2090,6 +2109,8 @@ additional property:
 @beginTable
 @row3col{inc, float,
     The amount by which the number is changed by a single arrow press.}
+@row3col{digits, integer,
+    Sets the precision of the value of the spin control (default: 0). @since 3.1.7.}
 @endTable
 
 @since  3.1.1.
@@ -2229,6 +2250,17 @@ No additional properties.
      Should the button be checked/pressed initially (default: 0)?}
 @row3col{bitmap, @ref overview_xrcformat_type_bitmap,
     Bitmap to display in the button (optional). @since 3.1.1}
+@row3col{pressed, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is pressed (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{focus, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button has focus (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{disabled, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the button is disabled (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{current, @ref overview_xrcformat_type_bitmap,
+     Bitmap to show when the mouse cursor hovers above the bitmap (default: none, same as @c bitmap). @since 3.1.7}
+@row3col{margins, @ref overview_xrcformat_type_size,
+    Set the margins between the bitmap and the text of the button.
+    This method is currently only implemented under MSW. If it is not called, a default margin is used around the bitmap. @since 3.1.7}
 @row3col{bitmapposition, @c wxLEFT|wxRIGHT|wxTOP|wxBOTTOM,
     Position of the bitmap in the button, see wxButton::SetBitmapPosition() (default: wxLEFT). @since 3.1.1}
 @endTable
