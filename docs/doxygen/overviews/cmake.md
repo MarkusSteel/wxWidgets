@@ -69,7 +69,7 @@ wxBUILD_TESTS             | STRING | OFF     | CONSOLE_ONLY, ALL or OFF
 wxBUILD_SAMPLES           | STRING | OFF     | SOME, ALL or OFF
 wxBUILD_DEMOS             | BOOL   | OFF     | Build demo applications
 wxUSE_GUI                 | BOOL   | ON      | Build the UI libraries
-wxBUILD_COMPATIBILITY     | STRING | 3.0     | 2.8, 3.0 or 3.1 API compatibility
+wxBUILD_COMPATIBILITY     | STRING | 3.2     | Enable API compatibility with 3.0, 3.2 or neither ("NONE")
 wxBUILD_PRECOMP           | BOOL   | ON      | Use precompiled headers
 wxBUILD_MONOLITHIC        | BOOL   | OFF     | Build a single library
 
@@ -100,6 +100,14 @@ Using find_package                     {#cmake_find_package}
 You can use `find_package(wxWidgets)` to use a compiled version of wxWidgets.
 Have a look at the [CMake Documentation](https://cmake.org/cmake/help/latest/module/FindwxWidgets.html)
 for detailed instructions. wxWidgets also provides an example CMake file in the minimal sample folder.
+
+*WARNING*: Please note that CMake `findwxWidgets` module unfortunately doesn't
+detect wxWidgets 3.2.0 in versions of CMake older than 3.24. You may copy the
+latest version of `FindwxWidgets.cmake` from [CMake sources][1] to your system
+to fix this or, if you build wxWidgets itself using CMake, use `CONFIG` mode of
+`find_package()` which works even with older CMake versions.
+
+[1]: https://gitlab.kitware.com/cmake/cmake/-/blob/master/Modules/FindwxWidgets.cmake
 
 Your *CMakeLists.txt* would look like this:
 ~~~
