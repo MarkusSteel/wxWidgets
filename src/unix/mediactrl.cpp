@@ -117,36 +117,36 @@ public:
                                      const wxSize& size,
                                      long style,
                                      const wxValidator& validator,
-                                     const wxString& name) wxOVERRIDE;
+                                     const wxString& name) override;
 
-    virtual bool Play() wxOVERRIDE;
-    virtual bool Pause() wxOVERRIDE;
-    virtual bool Stop() wxOVERRIDE;
+    virtual bool Play() override;
+    virtual bool Pause() override;
+    virtual bool Stop() override;
 
-    virtual bool Load(const wxString& fileName) wxOVERRIDE;
-    virtual bool Load(const wxURI& location) wxOVERRIDE;
+    virtual bool Load(const wxString& fileName) override;
+    virtual bool Load(const wxURI& location) override;
     virtual bool Load(const wxURI& location,
-                      const wxURI& proxy) wxOVERRIDE
+                      const wxURI& proxy) override
         { return wxMediaBackendCommonBase::Load(location, proxy); }
 
 
-    virtual wxMediaState GetState() wxOVERRIDE;
+    virtual wxMediaState GetState() override;
 
-    virtual bool SetPosition(wxLongLong where) wxOVERRIDE;
-    virtual wxLongLong GetPosition() wxOVERRIDE;
-    virtual wxLongLong GetDuration() wxOVERRIDE;
+    virtual bool SetPosition(wxLongLong where) override;
+    virtual wxLongLong GetPosition() override;
+    virtual wxLongLong GetDuration() override;
 
-    virtual void Move(int x, int y, int w, int h) wxOVERRIDE;
-    wxSize GetVideoSize() const wxOVERRIDE;
+    virtual void Move(int x, int y, int w, int h) override;
+    wxSize GetVideoSize() const override;
 
-    virtual double GetPlaybackRate() wxOVERRIDE;
-    virtual bool SetPlaybackRate(double dRate) wxOVERRIDE;
+    virtual double GetPlaybackRate() override;
+    virtual bool SetPlaybackRate(double dRate) override;
 
-    virtual wxLongLong GetDownloadProgress() wxOVERRIDE;
-    virtual wxLongLong GetDownloadTotal() wxOVERRIDE;
+    virtual wxLongLong GetDownloadProgress() override;
+    virtual wxLongLong GetDownloadTotal() override;
 
-    virtual bool SetVolume(double dVolume) wxOVERRIDE;
-    virtual double GetVolume() wxOVERRIDE;
+    virtual bool SetVolume(double dVolume) override;
+    virtual double GetVolume() override;
 
     //------------implementation from now on-----------------------------------
     bool CheckForErrors();
@@ -1059,7 +1059,9 @@ bool wxGStreamerMediaBackend::CreateControl(wxControl* ctrl, wxWindow* parent,
     // Turn off double-buffering so that
     // so it doesn't draw over the video and cause sporadic
     // disappearances of the video
+    wxGCC_WARNING_SUPPRESS(deprecated-declarations)
     gtk_widget_set_double_buffered(m_ctrl->m_wxwindow, FALSE);
+    wxGCC_WARNING_RESTORE(deprecated-declarations)
 #endif
 
     // don't erase the background of our control window

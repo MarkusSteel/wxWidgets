@@ -161,11 +161,6 @@ public:
     wxGLAttributes& Samplers(int val);
     wxGLAttributes& FrameBuffersRGB();
     void EndList(); // No more values can be chained
-
-    // This function is undocumented and cannot be chained on purpose!
-    // To keep backwards compatibility with versions before wx3.1 we add here
-    // the default values used in those versions for the case of NULL list.
-    void AddDefaultsForWXBefore31();
 };
 
 // ----------------------------------------------------------------------------
@@ -331,7 +326,7 @@ class WXDLLIMPEXP_GL wxGLApp : public wxGLAppBase
 public:
     wxGLApp() : wxGLAppBase() { }
 
-    virtual bool InitGLVisual(const int *attribList) wxOVERRIDE;
+    virtual bool InitGLVisual(const int *attribList) override;
 
 private:
     wxDECLARE_DYNAMIC_CLASS(wxGLApp);

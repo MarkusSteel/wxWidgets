@@ -54,7 +54,7 @@
 class MyApp: public wxApp
 {
 public:
-    virtual bool OnInit() wxOVERRIDE;
+    virtual bool OnInit() override;
 };
 
 // ----------------------------------------------------------------------------
@@ -81,6 +81,7 @@ private:
     void OnCustomHeaderHeight(wxCommandEvent& event);
 #endif // wxHAS_GENERIC_DATAVIEWCTRL
     void OnGetPageInfo(wxCommandEvent& event);
+    void OnHitTest(wxCommandEvent& event);
     void OnDisable(wxCommandEvent& event);
     void OnClearMyMusicTreeModel(wxCommandEvent& event);
     void OnSetForegroundColour(wxCommandEvent& event);
@@ -236,7 +237,7 @@ public:
         : wxDataViewCustomRenderer("string", mode, wxALIGN_CENTER)
        { }
 
-    virtual bool Render( wxRect rect, wxDC *dc, int state ) wxOVERRIDE
+    virtual bool Render( wxRect rect, wxDC *dc, int state ) override
     {
         dc->SetBrush( *wxLIGHT_GREY_BRUSH );
         dc->SetPen( *wxTRANSPARENT_PEN );
@@ -256,7 +257,7 @@ public:
                               wxDataViewModel *WXUNUSED(model),
                               const wxDataViewItem &WXUNUSED(item),
                               unsigned int WXUNUSED(col),
-                              const wxMouseEvent *mouseEvent) wxOVERRIDE
+                              const wxMouseEvent *mouseEvent) override
     {
         wxString position;
         if ( mouseEvent )
@@ -267,32 +268,32 @@ public:
         return false;
     }
 
-    virtual wxSize GetSize() const wxOVERRIDE
+    virtual wxSize GetSize() const override
     {
         return GetView()->FromDIP(wxSize(60, 20));
     }
 
-    virtual bool SetValue( const wxVariant &value ) wxOVERRIDE
+    virtual bool SetValue( const wxVariant &value ) override
     {
         m_value = value.GetString();
         return true;
     }
 
-    virtual bool GetValue( wxVariant &WXUNUSED(value) ) const wxOVERRIDE { return true; }
+    virtual bool GetValue( wxVariant &WXUNUSED(value) ) const override { return true; }
 
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE
+    virtual wxString GetAccessibleDescription() const override
     {
         return m_value;
     }
 #endif // wxUSE_ACCESSIBILITY
 
-    virtual bool HasEditorCtrl() const wxOVERRIDE { return true; }
+    virtual bool HasEditorCtrl() const override { return true; }
 
     virtual wxWindow*
     CreateEditorCtrl(wxWindow* parent,
                      wxRect labelRect,
-                     const wxVariant& value) wxOVERRIDE
+                     const wxVariant& value) override
     {
         wxTextCtrl* text = new wxTextCtrl(parent, wxID_ANY, value,
                                           labelRect.GetPosition(),
@@ -304,7 +305,7 @@ public:
     }
 
     virtual bool
-    GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value) wxOVERRIDE
+    GetValueFromEditorCtrl(wxWindow* ctrl, wxVariant& value) override
     {
         wxTextCtrl* text = wxDynamicCast(ctrl, wxTextCtrl);
         if ( !text )
@@ -332,13 +333,13 @@ public:
         : wxDataViewCustomRenderer("string", wxDATAVIEW_CELL_INERT, 0)
     { }
 
-    virtual bool Render(wxRect rect, wxDC *dc, int state) wxOVERRIDE
+    virtual bool Render(wxRect rect, wxDC *dc, int state) override
     {
         RenderText(m_value, 0, rect, dc, state);
         return true;
     }
 
-    virtual wxSize GetSize() const wxOVERRIDE
+    virtual wxSize GetSize() const override
     {
         wxSize txtSize = GetTextExtent(m_value);
         int lines = m_value.Freq('\n') + 1;
@@ -346,17 +347,17 @@ public:
         return txtSize;
     }
 
-    virtual bool SetValue(const wxVariant &value) wxOVERRIDE
+    virtual bool SetValue(const wxVariant &value) override
     {
         m_value = value.GetString();
         m_value.Replace(" ", "\n");
         return true;
     }
 
-    virtual bool GetValue(wxVariant &WXUNUSED(value)) const wxOVERRIDE { return true; }
+    virtual bool GetValue(wxVariant &WXUNUSED(value)) const override { return true; }
 
 #if wxUSE_ACCESSIBILITY
-    virtual wxString GetAccessibleDescription() const wxOVERRIDE
+    virtual wxString GetAccessibleDescription() const override
     {
         return m_value;
     }
@@ -398,6 +399,7 @@ enum
 {
     ID_CLEARLOG = wxID_HIGHEST+1,
     ID_GET_PAGE_INFO,
+    ID_HIT_TEST,
     ID_DISABLE,
     ID_CLEAR_MODEL,
     ID_BACKGROUND_COLOUR,
@@ -480,6 +482,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU( ID_CLEARLOG, MyFrame::OnClearLog )
 
     EVT_MENU( ID_GET_PAGE_INFO, MyFrame::OnGetPageInfo )
+    EVT_MENU( ID_HIT_TEST, MyFrame::OnHitTest )
     EVT_MENU( ID_DISABLE, MyFrame::OnDisable )
     EVT_MENU( ID_CLEAR_MODEL, MyFrame::OnClearMyMusicTreeModel )
     EVT_MENU( ID_FOREGROUND_COLOUR, MyFrame::OnSetForegroundColour )
@@ -599,6 +602,7 @@ MyFrame::MyFrame(wxFrame *frame, const wxString &title, int x, int y, int w, int
     wxMenu *file_menu = new wxMenu;
     file_menu->Append(ID_CLEARLOG, "&Clear log\tCtrl-L");
     file_menu->Append(ID_GET_PAGE_INFO, "Show current &page info");
+    file_menu->Append(ID_HIT_TEST, "Show item under mouse\tCtrl-M");
     file_menu->AppendCheckItem(ID_DISABLE, "&Disable\tCtrl-D");
     file_menu->Append(ID_CLEAR_MODEL, "&Clear MyMusicTreeModel\tCtrl-W");
     file_menu->Append(ID_FOREGROUND_COLOUR, "Set &foreground colour...\tCtrl-S");
@@ -1141,6 +1145,28 @@ void MyFrame::OnGetPageInfo(wxCommandEvent& WXUNUSED(event))
     wxLogMessage("%s and there are %d items per page",
                  topDesc,
                  dvc->GetCountPerPage());
+}
+
+void MyFrame::OnHitTest(wxCommandEvent& WXUNUSED(event))
+{
+    wxDataViewCtrl* const dvc = m_ctrl[m_notebook->GetSelection()];
+
+    wxDataViewItem item;
+    wxDataViewColumn* column = NULL;
+    dvc->HitTest(dvc->ScreenToClient(wxGetMousePosition()), item, column);
+
+    if ( item.IsOk() )
+    {
+        unsigned colIdx = column ? column->GetModelColumn() : 0;
+
+        wxVariant value;
+        dvc->GetModel()->GetValue(value, item, colIdx);
+        wxLogMessage("Item under mouse is \"%s\"", value.GetString());
+    }
+    else
+    {
+        wxLogMessage("No item under mouse");
+    }
 }
 
 void MyFrame::OnDisable(wxCommandEvent& event)
@@ -1741,6 +1767,19 @@ void MyFrame::OnSorted( wxDataViewEvent &event )
 
 void MyFrame::OnDataViewChar(wxKeyEvent& event)
 {
+    wxString key;
+#if wxUSE_UNICODE
+    if ( event.GetUnicodeKey() != WXK_NONE )
+        key.Printf("\"%c\"", event.GetUnicodeKey());
+    else
+#endif
+    if ( event.GetKeyCode() != WXK_NONE )
+        key.Printf("wxKeyCode(%d)", event.GetKeyCode());
+    else
+        key = "unknown key";
+
+    wxLogMessage("wxEVT_CHAR for %s", key);
+
     if ( event.GetKeyCode() == WXK_DELETE )
         DeleteSelectedItems();
     else

@@ -32,6 +32,7 @@
 
 #ifdef __WXGTK20__
 #include "wx/gtk/private/wrapgtk.h"
+#include "wx/gtk/private/gtk3-compat.h"
 #include <gdk/gdkx.h>
 
 GtkWidget* wxGetTopLevelGTK();
@@ -129,11 +130,11 @@ public:
     // The returned pointer is owned by the caller.
     static wxUIActionSimulatorImpl* New();
 
-    virtual bool MouseMove(long x, long y) wxOVERRIDE;
-    virtual bool MouseDown(int button = wxMOUSE_BTN_LEFT) wxOVERRIDE;
-    virtual bool MouseUp(int button = wxMOUSE_BTN_LEFT) wxOVERRIDE;
+    virtual bool MouseMove(long x, long y) override;
+    virtual bool MouseDown(int button = wxMOUSE_BTN_LEFT) override;
+    virtual bool MouseUp(int button = wxMOUSE_BTN_LEFT) override;
 
-    virtual bool DoKey(int keycode, int modifiers, bool isDown) wxOVERRIDE;
+    virtual bool DoKey(int keycode, int modifiers, bool isDown) override;
 
 protected:
     // This ctor takes ownership of the display.
@@ -240,9 +241,9 @@ public:
     }
 
 private:
-    virtual bool DoX11Button(int xbutton, bool isDown) wxOVERRIDE;
-    virtual bool DoX11MouseMove(long x, long y) wxOVERRIDE;
-    virtual bool DoX11Key(KeyCode xkeycode, int modifiers, bool isDown) wxOVERRIDE;
+    virtual bool DoX11Button(int xbutton, bool isDown) override;
+    virtual bool DoX11MouseMove(long x, long y) override;
+    virtual bool DoX11Key(KeyCode xkeycode, int modifiers, bool isDown) override;
 
     wxDECLARE_NO_COPY_CLASS(wxUIActionSimulatorPlainX11Impl);
 };
@@ -354,9 +355,9 @@ public:
     }
 
 private:
-    virtual bool DoX11Button(int xbutton, bool isDown) wxOVERRIDE;
-    virtual bool DoX11MouseMove(long x, long y) wxOVERRIDE;
-    virtual bool DoX11Key(KeyCode xkeycode, int modifiers, bool isDown) wxOVERRIDE;
+    virtual bool DoX11Button(int xbutton, bool isDown) override;
+    virtual bool DoX11MouseMove(long x, long y) override;
+    virtual bool DoX11Key(KeyCode xkeycode, int modifiers, bool isDown) override;
 
     wxDECLARE_NO_COPY_CLASS(wxUIActionSimulatorXTestImpl);
 };
@@ -435,9 +436,13 @@ bool wxUIActionSimulatorX11Impl::MouseMove(long x, long y)
         return false;
 
 #ifdef  __WXGTK20__
-    GdkWindow* const gdkwin1 = gdk_window_at_pointer(NULL, NULL);
+#ifdef  __WXGTK3__
+    GdkDisplay* const display = gdk_window_get_display(wxGetTopLevelGDK());
+    GdkDevice* const device = wx_get_gdk_device_from_display(display);
+#endif
+    GdkWindow* const gdkwin1 = wx_gdk_device_get_window_at_position(device, NULL, NULL);
     const bool ret = DoX11MouseMove(x, y);
-    GdkWindow* const gdkwin2 = gdk_window_at_pointer(NULL, NULL);
+    GdkWindow* const gdkwin2 = wx_gdk_device_get_window_at_position(device, NULL, NULL);
 
     if ( gdkwin1 != gdkwin2 )
     {

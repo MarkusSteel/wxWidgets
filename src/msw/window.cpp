@@ -539,10 +539,27 @@ bool wxWindowMSW::CreateUsingMSWClass(const wxChar* classname,
     msflags &= ~WS_BORDER;
 #endif // wxUniversal
 
+    // Enable double buffering by default for all our own, i.e. not the ones
+    // using native controls, classes.
+    //
+    // Note that this function is not used for top-level windows, so we don't
+    // set this style for them, and also that setting it for children of
+    // windows that already have WS_EX_COMPOSITED set doesn't seem to have any
+    // bad effect as the style is just ignored in this case, so we don't bother
+    // checking it it's already set for the parent, even though we could.
+    if ( !classname )
+    {
+        exstyle |= WS_EX_COMPOSITED;
+    }
+
     if ( IsShown() )
     {
         msflags |= WS_VISIBLE;
     }
+
+    // If the class name is not specified, use the one for generic wxWindow.
+    if ( !classname )
+        classname = GetMSWClassName(style);
 
     if ( !MSWCreate(classname, NULL, pos, size, msflags, exstyle) )
         return false;
@@ -6230,7 +6247,7 @@ bool wxWindowMSW::HandleZoomGesture(const wxPoint& pt,
     if ( InitGestureEvent(event, pt, flags) )
     {
         s_previousLocation = pt;
-        s_intialFingerDistance = fingerDistance;
+        s_intialFingerDistance = (int)fingerDistance;
     }
 
     // Calculate center point of the zoom. Human beings are not very good at
@@ -6240,7 +6257,7 @@ bool wxWindowMSW::HandleZoomGesture(const wxPoint& pt,
     // current and last positions.
     const wxPoint ptCenter = (s_previousLocation + pt)/2;
 
-    const double zoomFactor = (double) fingerDistance / s_intialFingerDistance;
+    const double zoomFactor = (double) ((int) fingerDistance) / s_intialFingerDistance;
 
     event.SetZoomFactor(zoomFactor);
 
@@ -7899,7 +7916,7 @@ bool wxWindowMSW::HandleHotKey(WXWPARAM wParam, WXLPARAM lParam)
 class wxIdleWakeUpModule : public wxModule
 {
 public:
-    virtual bool OnInit() wxOVERRIDE
+    virtual bool OnInit() override
     {
         ms_hMsgHookProc = ::SetWindowsHookEx
                             (
@@ -7919,7 +7936,7 @@ public:
         return true;
     }
 
-    virtual void OnExit() wxOVERRIDE
+    virtual void OnExit() override
     {
         ::UnhookWindowsHookEx(wxIdleWakeUpModule::ms_hMsgHookProc);
     }
