@@ -179,6 +179,8 @@ Currently the following symbols exist:
     ever, be necessary to use this symbol directly, functions such as
     wxWindow::FromDIP() and wxBitmap::GetLogicalSize() exist to hide the
     differences between the platforms with and without DPI-independent pixels.}
+@itemdef{wxHAS_IMAGE_RESOURCES, Defined if wxICON() and wxBITMAP() macros use
+    images from (Windows) resources. Otherwise, these macros use XPMs.}
 @itemdef{wxHAS_MEMBER_DEFAULT, Defined if the currently used compiler supports
     C++11 @c =default.}
 @itemdef{wxHAS_LARGE_FILES, Defined if wxFile supports files more than 4GB in
@@ -364,9 +366,10 @@ more details.
         includes a number of wxWidgets headers thus making it unnecessary to include
         them explicitly. However if this is not defined, you do need to include them
         and so the usual idiom which allows to support both cases is to first include
-        @c wx/wxprec.h} and then, inside <tt>\#ifndef WX_PRECOMP</tt>, individual
+        @c wx/wxprec.h and then, inside <tt>\#ifndef WX_PRECOMP</tt>, individual
         headers you need.}
-@itemdef{_UNICODE and UNICODE, both are defined if wxUSE_UNICODE is set to @c 1}
+@itemdef{_UNICODE and UNICODE, are both always defined in current wxWidgets
+    versions.}
 @itemdef{wxUSE_GUI,
         this particular feature test macro is defined to 1
         when compiling or using the library with the GUI features activated,

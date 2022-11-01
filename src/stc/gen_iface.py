@@ -84,18 +84,69 @@ notMappedSciValues = set([
 
 # Map some generic typenames to wx types, using return value syntax
 retTypeMap = {
+    'Accessibility': 'int',
+    'Alpha': 'int',
+    'AnnotationVisible': 'int',
+    'AutomaticFold': 'int',
+    'CaretPolicy': 'int',
+    'CaretSticky': 'int',
+    'CaretStyle': 'int',
+    'CaseInsensitiveBehaviour': 'int',
+    'CaseVisible': 'int',
+    'CharacterSet': 'int',
+    'colour': 'wxColour',
+    'CursorShape': 'int',
+    'DocumentOption': 'int',
+    'EdgeVisualStyle': 'int',
+    'EndOfLine': 'int',
+    'EOLAnnotationVisible': 'int',
+    'FindOption': 'int',
+    'FoldAction': 'int',
+    'FoldDisplayTextStyle': 'int',
+    'FoldFlag': 'int',
+    'FoldLevel': 'int',
+    'FontQuality': 'int',
+    'FontWeight': 'int',
+    'IdleStyling': 'int',
+    'IMEInteraction': 'int',
+    'IndentView': 'int',
+    'IndicatorStyle': 'int',
+    'IndicFlag': 'int',
+    'line': 'int',
+    'LineCache': 'int',
+    'LineEndType': 'int',
+    'MarginOption': 'int',
+    'MarginType': 'int',
+    'ModificationFlags': 'int',
+    'MultiAutoComplete': 'int',
+    'MultiPaste': 'int',
+    'Ordering': 'int',
+    'PhasesDraw': 'int',
+    'PopUp': 'int',
     'position': 'int',
-    'string':   'wxString',
-    'colour':   'wxColour',
+    'PrintOption': 'int',
+    'SelectionMode': 'int',
+    'Status': 'int',
+    'string': 'wxString',
+    'TabDrawMode': 'int',
+    'Technology': 'int',
+    'TypeProperty': 'int',
+    'UndoFlags': 'int',
+    'VirtualSpace': 'int',
+    'VisiblePolicy': 'int',
+    'WhiteSpace': 'int',
+    'Wrap': 'int',
+    'WrapIndentMode': 'int',
+    'WrapVisualFlag': 'int',
+    'WrapVisualLocation': 'int',
     }
 
 # Map some generic typenames to wx types, using parameter syntax
-paramTypeMap = {
-    'position': 'int',
-    'string':   'const wxString&',
-    'colour':   'const wxColour&',
-    'keymod':   'int',
-}
+paramTypeMap = retTypeMap.copy()
+paramTypeMap.update({
+    'string': 'const wxString&',
+    'colour': 'const wxColour&',
+    })
 
 # Map of method info that needs tweaked.  Either the name needs changed, or
 # the method definition/implementation.  Tuple items are:
@@ -837,13 +888,8 @@ methodOverrideMap = {
     (0,
      0,
      '''void %s(int codePage) {
-#if wxUSE_UNICODE
     wxASSERT_MSG(codePage == wxSTC_CP_UTF8,
-                 wxT("Only wxSTC_CP_UTF8 may be used when wxUSE_UNICODE is on."));
-#else
-    wxASSERT_MSG(codePage != wxSTC_CP_UTF8,
-                 wxT("wxSTC_CP_UTF8 may not be used when wxUSE_UNICODE is off."));
-#endif
+                 wxT("Only wxSTC_CP_UTF8 may be used."));
     SendMsg(%s, codePage);'''
     ),
 
@@ -1066,6 +1112,71 @@ methodOverrideMap = {
     'SetKeysUnicode' : (None,0,0),
     'GetKeysUnicode' : (None,0,0),
 
+    'NameOfStyle' :
+    (0,
+     'wxString %s(int style) const;',
+     '''wxString %s(int style) const {
+         const int msg = %s;
+         long len = SendMsg(msg, style, (sptr_t)nullptr);
+         if (!len) return wxEmptyString;
+
+         wxCharBuffer buf(len);
+         SendMsg(msg, style, (sptr_t)buf.data());
+         return stc2wx(buf);'''
+    ),
+
+    'TagsOfStyle' :
+    (0,
+     'wxString %s(int style) const;',
+     '''wxString %s(int style) const {
+         const int msg = %s;
+         long len = SendMsg(msg, style, (sptr_t)nullptr);
+         if (!len) return wxEmptyString;
+
+         wxCharBuffer buf(len);
+         SendMsg(msg, style, (sptr_t)buf.data());
+         return stc2wx(buf);'''
+    ),
+
+    'DescriptionOfStyle' :
+    (0,
+     'wxString %s(int style) const;',
+     '''wxString %s(int style) const {
+         const int msg = %s;
+         long len = SendMsg(msg, style, (sptr_t)nullptr);
+         if (!len) return wxEmptyString;
+
+         wxCharBuffer buf(len);
+         SendMsg(msg, style, (sptr_t)buf.data());
+         return stc2wx(buf);'''
+    ),
+
+    'GetDefaultFoldDisplayText' :
+    (0,
+     'wxString %s() const;',
+     '''wxString %s() const {
+         const int msg = %s;
+         long len = SendMsg(msg, 0, (sptr_t)nullptr);
+         if (!len) return wxEmptyString;
+
+         wxCharBuffer buf(len);
+         SendMsg(msg, 0, (sptr_t)buf.data());
+         return stc2wx(buf);'''
+    ),
+
+    'EOLAnnotationGetText' :
+    (0,
+     'wxString %s(int line) const;',
+     '''wxString %s(int line) const {
+         const int msg = %s;
+         long len = SendMsg(msg, line, (sptr_t)nullptr);
+         if (!len) return wxEmptyString;
+
+         wxCharBuffer buf(len);
+         SendMsg(msg, line, (sptr_t)buf.data());
+         return stc2wx(buf);'''
+    ),
+
     '' : ('', 0, 0),
 
     }
@@ -1139,6 +1250,9 @@ def processIface(iface, h_tmplt, cpp_tmplt, ih_tmplt, h_dest, cpp_dest, docstr_d
             pass
 
         elif op == 'lex ':
+            pass
+
+        elif op == 'ali ':
             pass
 
         else:

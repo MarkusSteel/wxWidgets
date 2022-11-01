@@ -488,8 +488,9 @@ public:
 
 protected:
     // Used from ctors (including those in the derived classes) and takes
+
     // ownership of the graphics pointer that must be non-null.
-    void Init(Graphics* graphics, int width, int height);
+    void Init(Graphics* graphics, int width, int height, const Matrix* inheritedTransform = nullptr);
 
 private:
     virtual void DoDrawText(const wxString& str, wxDouble x, wxDouble y) override;
@@ -498,6 +499,8 @@ private:
     wxStack<GraphicsState> m_stateStack;
     GraphicsState m_state1;
     GraphicsState m_state2;
+    Matrix* m_internalTransform;
+    Matrix* m_internalTransformInv;
 
     wxDECLARE_NO_COPY_CLASS(wxGDIPlusContext);
 };
@@ -1868,31 +1871,19 @@ wxGDIPlusContext::wxGDIPlusContext( wxGraphicsRenderer* renderer, const wxDC& dc
     // We don't set HDC origin at MSW level in wxDC because this limits it to
     // 2^27 range and we prefer to handle it ourselves to allow using the full
     // 2^32 range of int coordinates, but we need to let GDI+ know about the
-    // origin shift. It would seem that using TranslateTransform() should be
-    // the right way to do it, but using it results in drawing artifacts when
-    // scrolling (see #22480), so we temporarily set the origin instead: this
-    // won't work for the shifts beyond 2^27 GDI range, but is better than
-    // nothing.
-    class TempSetViewportOrg
-    {
-    public:
-        TempSetViewportOrg(HDC hdc, const wxPoint& origin)
-            : m_hdc(hdc)
-        {
-            ::SetViewportOrgEx(m_hdc, origin.x, origin.y, &m_originPrev);
-        }
+    // origin shift by storing it as an internal transformation
+    // (which is not going to be exposed).
+    double sx, sy;
+    dc.GetUserScale(&sx, &sy);
+    double lsx, lsy;
+    dc.GetLogicalScale(&lsx, &lsy);
+    sx *= lsx;
+    sy *= lsy;
+    wxPoint org = dc.GetDeviceOrigin();
+    Matrix* m = new Matrix();
+    m->Translate(org.x / sx, org.y / sy);
 
-        ~TempSetViewportOrg()
-        {
-            ::SetViewportOrgEx(m_hdc, m_originPrev.x, m_originPrev.y, nullptr);
-        }
-
-    private:
-        const HDC m_hdc;
-        POINT m_originPrev;
-    } tempSetViewportOrg(hdc, dc.GetDeviceOrigin());
-
-    Init(new Graphics(hdc), sz.x, sz.y);
+    Init(new Graphics(hdc), sz.x, sz.y, m);
 }
 
 wxGDIPlusContext::wxGDIPlusContext( wxGraphicsRenderer* renderer,
@@ -1919,24 +1910,38 @@ wxGDIPlusContext::wxGDIPlusContext(wxGraphicsRenderer* renderer)
     m_context = nullptr;
 }
 
-void wxGDIPlusContext::Init(Graphics* graphics, int width, int height)
+void wxGDIPlusContext::Init(Graphics* graphics, int width, int height, const Matrix* inheritedTransform)
 {
     m_context = graphics;
     m_state1 = 0;
     m_state2 = 0;
     m_width = width;
     m_height = height;
+    m_internalTransform = new Matrix();
 
     m_context->SetTextRenderingHint(TextRenderingHintSystemDefault);
     m_context->SetPixelOffsetMode(PixelOffsetModeHalf);
     m_context->SetSmoothingMode(SmoothingModeHighQuality);
-
+    if ( inheritedTransform )
+    {
+        m_context->MultiplyTransform(inheritedTransform);
+    }
+    m_context->GetTransform(m_internalTransform);
+    wxASSERT(m_internalTransform->IsInvertible());
+    m_internalTransformInv = m_internalTransform->Clone();
+    if ( m_internalTransformInv->Invert() != Gdiplus::Ok )
+    {
+        delete m_internalTransformInv;
+        m_internalTransformInv = new Matrix();
+    }
     m_state1 = m_context->Save();
     m_state2 = m_context->Save();
 }
 
 wxGDIPlusContext::~wxGDIPlusContext()
 {
+    delete m_internalTransform;
+    delete m_internalTransformInv;
     if ( m_context )
     {
         m_context->Restore( m_state2 );
@@ -2335,7 +2340,7 @@ void wxGDIPlusContext::DoDrawText(const wxString& str,
 
     m_context->DrawString
                (
-                    str.wc_str(*wxConvUI),  // string to draw, always Unicode
+                    str.wc_str(),           // string to draw, always Unicode
                     -1,                     // length: string is NUL-terminated
                     fontData->GetGDIPlusFont(),
                     PointF(x, y),
@@ -2349,7 +2354,7 @@ void wxGDIPlusContext::GetTextExtent( const wxString &str, wxDouble *width, wxDo
 {
     wxCHECK_RET( !m_font.IsNull(), wxT("wxGDIPlusContext::GetTextExtent - no valid font set") );
 
-    wxWCharBuffer s = str.wc_str( *wxConvUI );
+    wxWCharBuffer s = str.wc_str();
     Font* f = ((wxGDIPlusFontData*)m_font.GetRefData())->GetGDIPlusFont();
 
     // Get the font metrics if we actually need them.
@@ -2423,7 +2428,7 @@ void wxGDIPlusContext::GetPartialTextExtents(const wxString& text, wxArrayDouble
         return;
 
     Font* f = ((wxGDIPlusFontData*)m_font.GetRefData())->GetGDIPlusFont();
-    wxWCharBuffer ws = text.wc_str( *wxConvUI );
+    wxWCharBuffer ws = text.wc_str();
     size_t len = wcslen( ws ) ;
     wxASSERT_MSG(text.length() == len , wxT("GetPartialTextExtents not yet implemented for multichar situations"));
 
@@ -2498,14 +2503,21 @@ void wxGDIPlusContext::ConcatTransform( const wxGraphicsMatrix& matrix )
 // sets the transform of this context
 void wxGDIPlusContext::SetTransform( const wxGraphicsMatrix& matrix )
 {
-    m_context->SetTransform((Matrix*) matrix.GetNativeMatrix());
+    // To get actual transformation we need to concatenate
+    // given transformation with internal transformation.
+    m_context->SetTransform(m_internalTransform);
+    m_context->MultiplyTransform((Matrix*) matrix.GetNativeMatrix());
 }
 
 // gets the matrix of this context
 wxGraphicsMatrix wxGDIPlusContext::GetTransform() const
 {
     wxGraphicsMatrix matrix = CreateMatrix();
-    m_context->GetTransform((Matrix*) matrix.GetNativeMatrix());
+    Matrix* transformMatrix = static_cast<Matrix*>(matrix.GetNativeMatrix());
+    m_context->GetTransform(transformMatrix);
+
+    // Don't expose internal transformations.
+    transformMatrix->Multiply(m_internalTransformInv, Gdiplus::MatrixOrderAppend);
     return matrix;
 }
 

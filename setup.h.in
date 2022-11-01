@@ -151,11 +151,6 @@
 
 
 
-#ifndef wxUSE_UNICODE
-    #define wxUSE_UNICODE 0
-#endif
-
-
 #define wxUSE_EXCEPTIONS    0
 
 #define wxUSE_EXTENDED_RTTI 0
@@ -485,7 +480,6 @@
 
 #define wxUSE_DIRDLG 0
 
-
 #define wxUSE_FILEDLG       0
 
 #define wxUSE_FINDREPLDLG       0
@@ -583,7 +577,6 @@
 #define wxUSE_SVG 0
 
 #define wxUSE_DC_TRANSFORM_MATRIX 0
-
 
 
 #define wxUSE_IMAGE         0

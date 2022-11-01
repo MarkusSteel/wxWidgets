@@ -193,6 +193,9 @@ wxPropertyGridPageState::wxPropertyGridPageState()
     : m_pPropGrid(nullptr)
     , m_properties(&m_regularArray)
     , m_abcArray(nullptr)
+    , m_colWidths{wxPG_DEFAULT_SPLITTERX, wxPG_DEFAULT_SPLITTERX}
+    , m_editableColumns{1} // By default, we only have the 'value' column editable
+    , m_columnProportions{1, 1}
     , m_fSplitterX(wxPG_DEFAULT_SPLITTERX)
     , m_currentCategory(nullptr)
     , m_width(0)
@@ -204,14 +207,6 @@ wxPropertyGridPageState::wxPropertyGridPageState()
     , m_dontCenterSplitter(false)
 {
     m_regularArray.SetParentState(this);
-    m_colWidths.push_back( wxPG_DEFAULT_SPLITTERX );
-    m_colWidths.push_back( wxPG_DEFAULT_SPLITTERX );
-
-    m_columnProportions.push_back(1);
-    m_columnProportions.push_back(1);
-
-    // By default, we only have the 'value' column editable
-    m_editableColumns.push_back(1);
 }
 
 // -----------------------------------------------------------------------
@@ -1703,9 +1698,7 @@ bool wxPropertyGridPageState::PrepareToAddItem( wxPGProperty* property,
 
 wxPGProperty* wxPropertyGridPageState::DoAppend( wxPGProperty* property )
 {
-    wxPropertyCategory* cur_cat = m_currentCategory;
-    if ( property->IsCategory() )
-        cur_cat = nullptr;
+    wxPropertyCategory* cur_cat = property->IsCategory() ? nullptr : m_currentCategory;
 
     return DoInsert( cur_cat, -1, property );
 }

@@ -550,7 +550,7 @@ public:
          threads, but that the method will be always called in the main, GUI,
          thread context.
 
-         This overload is particularly useful in combination with C++11 lambdas:
+         This overload is particularly useful in combination with lambdas:
          @code
          wxGetApp().CallAfter([]{
              wxBell();
@@ -1632,9 +1632,6 @@ public:
         If the key pressed doesn't have any character value (e.g. a cursor key)
         this method will return @c WXK_NONE. In this case you should use
         GetKeyCode() to retrieve the value of the key.
-
-        This function is only available in Unicode build, i.e. when
-        @c wxUSE_UNICODE is 1.
     */
     wxChar GetUnicodeKey() const;
 
@@ -1902,7 +1899,7 @@ public:
 
     This class is used for system colour change events, which are generated
     when the user changes the colour settings or when the system theme changes
-    (e.g. automatic dark mode switching on macOS).
+    (e.g.\ automatic dark mode switching on macOS).
 
     Event handlers for this event can access the new system colour settings through
     wxSystemSettings::GetColour().

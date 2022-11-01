@@ -148,11 +148,6 @@
 
 
 
-#ifndef wxUSE_UNICODE
-    #cmakedefine01 wxUSE_UNICODE
-#endif
-
-
 #cmakedefine01 wxUSE_EXCEPTIONS
 
 #cmakedefine01 wxUSE_EXTENDED_RTTI
@@ -482,7 +477,6 @@
 
 #cmakedefine01 wxUSE_DIRDLG
 
-
 #cmakedefine01 wxUSE_FILEDLG
 
 #cmakedefine01 wxUSE_FINDREPLDLG
@@ -580,7 +574,6 @@
 #cmakedefine01 wxUSE_SVG
 
 #cmakedefine01 wxUSE_DC_TRANSFORM_MATRIX
-
 
 
 #cmakedefine01 wxUSE_IMAGE
