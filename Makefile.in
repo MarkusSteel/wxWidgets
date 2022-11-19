@@ -791,7 +791,6 @@ ALL_PORTS_BASE_HEADERS =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/unix/fswatcher_inotify.h \
@@ -2536,7 +2535,6 @@ COND_TOOLKIT__BASE_OSX_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/osx/core/cfdataref.h \
@@ -2564,7 +2562,6 @@ COND_TOOLKIT_COCOA_BASE_OSX_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/osx/core/cfdataref.h \
@@ -2592,7 +2589,6 @@ COND_TOOLKIT_GTK_BASE_OSX_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/osx/core/cfdataref.h \
@@ -2635,7 +2631,6 @@ COND_TOOLKIT_OSX_COCOA_BASE_OSX_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/osx/fswatcher_fsevents.h
 @COND_TOOLKIT_OSX_COCOA@BASE_OSX_HDR = $(COND_TOOLKIT_OSX_COCOA_BASE_OSX_HDR)
@@ -2648,7 +2643,6 @@ COND_TOOLKIT_X11_BASE_OSX_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/osx/core/cfdataref.h \
@@ -2677,7 +2671,6 @@ COND_PLATFORM_UNIX_1_BASE_PLATFORM_HDR =  \
 	wx/unix/evtloopsrc.h \
 	wx/unix/pipe.h \
 	wx/unix/stackwalk.h \
-	wx/unix/tls.h \
 	wx/unix/fswatcher_kqueue.h \
 	wx/unix/mimetype.h \
 	wx/unix/fswatcher_inotify.h \
@@ -3133,7 +3126,6 @@ COND_TOOLKIT_MSW_GUI_HDR =  \
 	wx/msw/ownerdrw.h \
 	wx/msw/ownerdrawnbutton.h \
 	wx/msw/palette.h \
-	wx/msw/panel.h \
 	wx/msw/pen.h \
 	wx/msw/printdlg.h \
 	wx/msw/printwin.h \
@@ -3535,7 +3527,6 @@ COND_USE_GUI_1_WXUNIV_1_GUI_CORE_HEADERS =  \
 	wx/univ/menu.h \
 	wx/univ/menuitem.h \
 	wx/univ/notebook.h \
-	wx/univ/panel.h \
 	wx/univ/radiobox.h \
 	wx/univ/radiobut.h \
 	wx/univ/renderer.h \
@@ -3611,7 +3602,6 @@ COND_USE_GUI_1_ALL_GUI_HEADERS =  \
 	wx/generic/msgdlgg.h \
 	wx/generic/numdlgg.h \
 	wx/generic/notebook.h \
-	wx/generic/panelg.h \
 	wx/generic/prntdlgg.h \
 	wx/generic/printps.h \
 	wx/generic/progdlgg.h \

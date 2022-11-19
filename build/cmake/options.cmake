@@ -53,7 +53,7 @@ if(NOT MSVC OR MSVC_VERSION GREATER 1800)
         set(wxCXX_STANDARD_DEFAULT COMPILER_DEFAULT)
     endif()
     wx_option(wxBUILD_CXX_STANDARD "C++ standard used to build wxWidgets targets"
-              ${wxCXX_STANDARD_DEFAULT} STRINGS COMPILER_DEFAULT 98 11 14 17 20)
+              ${wxCXX_STANDARD_DEFAULT} STRINGS COMPILER_DEFAULT 11 14 17 20)
 endif()
 
 if(WIN32)
@@ -85,7 +85,6 @@ if(NOT WIN32)
     wx_dependent_option(wxUSE_UTF8_LOCALE_ONLY "only support UTF-8 locales in UTF-8 build (Unix only)" ON "wxUSE_UNICODE_UTF8" OFF)
 endif()
 
-wx_option(wxUSE_COMPILER_TLS "enable use of compiler TLS support")
 if(NOT WIN32)
     wx_option(wxUSE_VISIBILITY "use of ELF symbols visibility")
 endif()
