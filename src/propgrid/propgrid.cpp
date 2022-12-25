@@ -754,7 +754,7 @@ bool wxPropertyGrid::DoSelectAndEdit( wxPGProperty* prop,
         // send event
         DoClearSelection(false, wxPG_SEL_NO_REFRESH);
 
-        if ( !wxPGItemExistsInVector<int>(m_pState->m_editableColumns, colIndex) )
+        if ( m_pState->m_editableColumns.find(colIndex) == m_pState->m_editableColumns.end() )
         {
             res = DoAddToSelection(prop, selFlags);
         }
@@ -922,19 +922,13 @@ void wxPropertyGrid::MakeColumnEditable( unsigned int column,
          wxS("Set wxPG_PROP_READONLY property flag instead")
     );
 
-    wxVector<int>& cols = m_pState->m_editableColumns;
-
     if ( editable )
     {
-        cols.push_back(column);
+        m_pState->m_editableColumns.insert(column);
     }
     else
     {
-        for ( int i = cols.size() - 1; i > 0; i-- )
-        {
-            if ( cols[i] == (int)column )
-                cols.erase( cols.begin() + i );
-        }
+        m_pState->m_editableColumns.erase(column);
     }
 }
 
@@ -5880,7 +5874,7 @@ void wxPropertyGrid::OnIdle( wxIdleEvent& WXUNUSED(event) )
     {
         size_t cntBefore = cntAfter;
 
-        DeleteProperty(m_deletedProperties[0]);
+        DeleteProperty(*(m_deletedProperties.begin()));
 
         cntAfter = m_deletedProperties.size();
         wxASSERT_MSG( cntAfter <= cntBefore,
@@ -5894,7 +5888,7 @@ void wxPropertyGrid::OnIdle( wxIdleEvent& WXUNUSED(event) )
     {
         size_t cntBefore = cntAfter;
 
-        RemoveProperty(m_removedProperties[0]);
+        RemoveProperty(*(m_removedProperties.begin()));
 
         cntAfter = m_removedProperties.size();
         wxASSERT_MSG( cntAfter <= cntBefore,
