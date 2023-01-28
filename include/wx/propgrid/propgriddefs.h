@@ -22,6 +22,7 @@ class WXDLLIMPEXP_FWD_CORE wxPoint;
 class WXDLLIMPEXP_FWD_CORE wxSize;
 class WXDLLIMPEXP_FWD_CORE wxFont;
 
+#include <limits>
 #if wxUSE_STD_CONTAINERS
 #include <numeric>
 #endif // wxUSE_STD_CONTAINERS
@@ -215,9 +216,19 @@ class WXDLLIMPEXP_FWD_PROPGRID wxPGValidationInfo;
 // This is the value placed in wxPGProperty::sm_wxPG_LABEL
 #define wxPG_LABEL_STRING       wxS("@!")
 #if WXWIN_COMPATIBILITY_3_0
-#define wxPG_NULL_BITMAP        wxNullBitmap
+#ifdef wxPG_MUST_DEPRECATE_MACRO_NAME
+#pragma deprecated(wxPG_NULL_BITMAP)
+#endif
+#define wxPG_NULL_BITMAP wxPG_DEPRECATED_MACRO_VALUE(wxNullBitmap,\
+    "wxPG_NULL_BITMAP is deprecated. Use wxNullBitmap instead.")
 #endif // WXWIN_COMPATIBILITY_3_0
-#define wxPG_COLOUR_BLACK       (*wxBLACK)
+#if WXWIN_COMPATIBILITY_3_2
+#ifdef wxPG_MUST_DEPRECATE_MACRO_NAME
+#pragma deprecated(wxPG_COLOUR_BLACK)
+#endif
+#define wxPG_COLOUR_BLACK wxPG_DEPRECATED_MACRO_VALUE((*wxBLACK),\
+    "wxPG_COLOUR_BLACK is deprecated. Use *wxBLACK instead.")
+#endif // WXWIN_COMPATIBILITY_3_2
 
 // Convert Red, Green and Blue to a single 32-bit value.
 #define wxPG_COLOUR(R,G,B) ((wxUint32)((R)+((G)<<8)+((B)<<16)))
@@ -252,7 +263,7 @@ typedef wxString wxPGCachedString;
 
 // Used to indicate wxPGChoices::Add etc. that the value is actually not given
 // by the caller.
-#define wxPG_INVALID_VALUE      INT_MAX
+constexpr int wxPG_INVALID_VALUE = std::numeric_limits<int>::max();
 
 // -----------------------------------------------------------------------
 
@@ -260,30 +271,9 @@ WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(wxPGProperty*, wxArrayPGProperty,
                                   wxBaseArrayPtrVoid,
                                   class WXDLLIMPEXP_PROPGRID);
 
-WX_DECLARE_STRING_HASH_MAP_WITH_DECL(void*,
-                                     wxPGHashMapS2P,
-                                     class WXDLLIMPEXP_PROPGRID);
-
 WX_DECLARE_STRING_HASH_MAP_WITH_DECL(wxString,
                                      wxPGHashMapS2S,
                                      class WXDLLIMPEXP_PROPGRID);
-
-WX_DECLARE_VOIDPTR_HASH_MAP_WITH_DECL(void*,
-                                      wxPGHashMapP2P,
-                                      class WXDLLIMPEXP_PROPGRID);
-
-WX_DECLARE_HASH_MAP_WITH_DECL(wxInt32,
-                              wxInt32,
-                              wxIntegerHash,
-                              wxIntegerEqual,
-                              wxPGHashMapI2I,
-                              class WXDLLIMPEXP_PROPGRID);
-
-WX_DECLARE_HASH_SET_WITH_DECL(int,
-                              wxIntegerHash,
-                              wxIntegerEqual,
-                              wxPGHashSetInt,
-                              class WXDLLIMPEXP_PROPGRID);
 
 #if WXWIN_COMPATIBILITY_3_0
 WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(wxObject*, wxArrayPGObject,
@@ -373,16 +363,16 @@ enum wxPG_SETVALUE_FLAGS
 //
 // Valid constants for wxPG_UINT_BASE attribute
 // (long because of wxVariant constructor)
-#define wxPG_BASE_OCT                       8L
-#define wxPG_BASE_DEC                       10L
-#define wxPG_BASE_HEX                       16L
-#define wxPG_BASE_HEXL                      32L
+constexpr long wxPG_BASE_OCT  =  8L;
+constexpr long wxPG_BASE_DEC  = 10L;
+constexpr long wxPG_BASE_HEX  = 16L;
+constexpr long wxPG_BASE_HEXL = 32L;
 
 //
 // Valid constants for wxPG_UINT_PREFIX attribute
-#define wxPG_PREFIX_NONE                    0L
-#define wxPG_PREFIX_0x                      1L
-#define wxPG_PREFIX_DOLLAR_SIGN             2L
+constexpr long wxPG_PREFIX_NONE        = 0L;
+constexpr long wxPG_PREFIX_0x          = 1L;
+constexpr long wxPG_PREFIX_DOLLAR_SIGN = 2L;
 
 // -----------------------------------------------------------------------
 // Editor class.
@@ -677,83 +667,6 @@ protected:
 
 #define WX_PG_TOKENIZER2_END() \
     }
-
-// -----------------------------------------------------------------------
-// wxVector utilities
-
-// Utility to check if specific item is in a vector.
-template<typename T>
-inline bool wxPGItemExistsInVector(const wxVector<T>& vector, const T& item)
-{
-#if wxUSE_STL
-    return std::find(vector.begin(), vector.end(), item) != vector.end();
-#else
-    for (typename wxVector<T>::const_iterator it = vector.begin(); it != vector.end(); ++it)
-    {
-        if ( *it == item )
-            return true;
-    }
-    return false;
-#endif // wxUSE_STL/!wxUSE_STL
-}
-
-// Utility to determine the index of the item in the vector.
-template<typename T>
-inline int wxPGItemIndexInVector(const wxVector<T>& vector, const T& item)
-{
-#if wxUSE_STL
-    typename wxVector<T>::const_iterator it = std::find(vector.begin(), vector.end(), item);
-    if ( it != vector.end() )
-        return (int)(it - vector.begin());
-
-    return wxNOT_FOUND;
-#else
-    for (typename wxVector<T>::const_iterator it = vector.begin(); it != vector.end(); ++it)
-    {
-        if ( *it == item )
-            return (int)(it - vector.begin());
-    }
-    return wxNOT_FOUND;
-#endif // wxUSE_STL/!wxUSE_STL
-}
-
-// Utility to remove given item from the vector.
-template<typename T>
-inline void wxPGRemoveItemFromVector(wxVector<T>& vector, const T& item)
-{
-#if wxUSE_STL
-    typename wxVector<T>::iterator it = std::find(vector.begin(), vector.end(), item);
-    if ( it != vector.end() )
-    {
-        vector.erase(it);
-    }
-#else
-    for (typename wxVector<T>::iterator it = vector.begin(); it != vector.end(); ++it)
-    {
-        if ( *it == item )
-        {
-            vector.erase(it);
-            return;
-        }
-    }
-#endif // wxUSE_STL/!wxUSE_STL
-}
-
-// Utility to calaculate sum of all elements of the vector.
-template<typename T>
-inline T wxPGGetSumVectorItems(const wxVector<T>& vector, T init)
-{
-#if wxUSE_STD_CONTAINERS
-    return std::accumulate(vector.begin(), vector.end(), init);
-#else
-    for (typename wxVector<T>::const_iterator it = vector.begin(); it != vector.end(); ++it)
-        init += *it;
-
-    return init;
-#endif // wxUSE_STD_CONTAINERS/!wxUSE_STD_CONTAINERS
-}
-
-// -----------------------------------------------------------------------
 
 #endif // wxUSE_PROPGRID
 

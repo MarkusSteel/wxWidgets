@@ -215,7 +215,7 @@ wxPGGlobalVarsClass::~wxPGGlobalVarsClass()
     // iterate over all the elements in the class
     for( const auto& vt_it : m_mapEditorClasses )
     {
-        delete static_cast<wxPGEditor*>(vt_it.second);
+        delete vt_it.second;
     }
 
     // Make sure the global pointers have been reset
@@ -2112,7 +2112,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
     const wxPGProperty* firstSelected = GetSelection();
     const wxPropertyGridPageState* state = m_pState;
-    const wxVector<int>& colWidths = state->m_colWidths;
+    const std::vector<int>& colWidths = state->m_colWidths;
     const unsigned int colCount = state->GetColumnCount();
 
     dc.SetFont(normalFont);
@@ -2123,7 +2123,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
     //
     // Pre-generate list of visible properties.
-    wxVector<wxPGProperty*> visPropArray;
+    std::vector<wxPGProperty*> visPropArray;
     visPropArray.reserve((m_height/m_lineHeight)+6);
 
     for ( ; !it.AtEnd(); it.Next() )
@@ -2146,7 +2146,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
     wxPGProperty* nextP = visPropArray[0];
 
     // Calculate splitters positions
-    wxVector<int> splitterPos;
+    std::vector<int> splitterPos;
     splitterPos.reserve(colCount);
     int sx = x;
     for ( int cw : colWidths )
@@ -2955,8 +2955,8 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     // Returns true if value passes all tests.
     //
 
-    m_validationInfo.m_failureBehavior = m_permanentValidationFailureBehavior;
-    m_validationInfo.m_isFailing = true;
+    m_validationInfo.SetFailureBehavior(m_permanentValidationFailureBehavior);
+    m_validationInfo.SetFailing(true);
 
     //
     // Variant list a special value that cannot be validated
@@ -3088,7 +3088,7 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
         pendingValue = value;
     }
 
-    m_validationInfo.m_isFailing = false;
+    m_validationInfo.SetFailing(false);
 
     return true;
 }
@@ -3160,7 +3160,7 @@ bool wxPropertyGrid::OnValidationFailure( wxPGProperty* property,
     wxON_BLOCK_EXIT_SET(m_inOnValidationFailure, false);
 
     wxWindow* editor = GetEditorControl();
-    int vfb = m_validationInfo.m_failureBehavior;
+    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
 
     if ( m_inDoSelectProperty )
     {
@@ -3168,10 +3168,10 @@ bool wxPropertyGrid::OnValidationFailure( wxPGProperty* property,
         // messages, if some were already shown for this property.
         if ( property->HasFlag(wxPG_PROP_INVALID_VALUE) )
         {
-            m_validationInfo.m_failureBehavior =
+            m_validationInfo.SetFailureBehavior(
                 vfb & ~(wxPG_VFB_SHOW_MESSAGE |
                         wxPG_VFB_SHOW_MESSAGEBOX |
-                        wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR);
+                        wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR));
         }
     }
 
@@ -3195,7 +3195,7 @@ bool wxPropertyGrid::OnValidationFailure( wxPGProperty* property,
 
 bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& WXUNUSED(invalidValue) )
 {
-    int vfb = m_validationInfo.m_failureBehavior;
+    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
 
     if ( vfb & wxPG_VFB_BEEP )
         ::wxBell();
@@ -3239,7 +3239,7 @@ bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& W
                 wxPG_VFB_SHOW_MESSAGEBOX |
                 wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR) )
     {
-        wxString msg = m_validationInfo.m_failureMessage;
+        wxString msg = m_validationInfo.GetFailureMessage();
 
         if ( msg.empty() )
             msg = _("You have entered invalid value. Press ESC to cancel editing.");
@@ -3281,7 +3281,7 @@ bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& W
 
 void wxPropertyGrid::DoOnValidationFailureReset( wxPGProperty* property )
 {
-    int vfb = m_validationInfo.m_failureBehavior;
+    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
 
     if ( vfb & wxPG_VFB_MARK_CELL )
     {
@@ -3318,7 +3318,7 @@ void wxPropertyGrid::DoOnValidationFailureReset( wxPGProperty* property )
         DoHidePropertyError(property);
     }
 
-    m_validationInfo.m_isFailing = false;
+    m_validationInfo.SetFailing(false);
 }
 
 // -----------------------------------------------------------------------
@@ -3476,8 +3476,8 @@ bool wxPropertyGrid::DoEditorValidate()
     if ( guard.IsInside() )
         return false;
 
-    m_validationInfo.m_failureBehavior = m_permanentValidationFailureBehavior;
-    m_validationInfo.m_isFailing = true;
+    m_validationInfo.SetFailureBehavior(m_permanentValidationFailureBehavior);
+    m_validationInfo.SetFailing(true);
 
     wxPGProperty* selected = GetSelection();
     if ( selected )
@@ -3493,7 +3493,7 @@ bool wxPropertyGrid::DoEditorValidate()
         }
     }
 
-    m_validationInfo.m_isFailing = false;
+    m_validationInfo.SetFailing(false);
 #endif
     return true;
 }
@@ -3643,7 +3643,7 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
                     // failing and value was not unspecified
                     if ( !valueIsPending &&
                          !pendingValue.IsNull() &&
-                         m_validationInfo.m_isFailing )
+                         m_validationInfo.IsFailing() )
                          valueIsPending = true;
                 }
                 else
@@ -4687,7 +4687,7 @@ bool wxPropertyGrid::SendEvent( wxEventType eventType, wxPGProperty* p,
     {
         wxASSERT( pValue );
         evt.SetCanVeto(true);
-        m_validationInfo.m_pValue = pValue;
+        m_validationInfo.SetValue(pValue ? *pValue : wxVariant());
         evt.SetupValidationInfo();
     }
     else
@@ -5649,9 +5649,9 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
         return;
     }
 
-    std::pair<int, int> actions = KeyEventToActions(event);
-    int action = actions.first;
-    int secondAction = actions.second;
+    int action;
+    int secondAction;
+    std::tie(action, secondAction) = KeyEventToActions(event);
 
     if ( editorFocused && action == wxPG_ACTION_CANCEL_EDIT )
     {
@@ -5676,13 +5676,7 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
 
     // Except for TAB, ESC, and any keys specifically dedicated to
     // wxPropertyGrid itself, handle child control events in child control.
-    if ( fromChild &&
-#if WXWIN_COMPATIBILITY_3_0
-         // Deprecated: use a hash set instead.
-         !wxPGItemExistsInVector<int>(m_dedicatedKeys, keycode) )
-#else
-         m_dedicatedKeys.find(keycode) == m_dedicatedKeys.end() )
-#endif
+    if ( fromChild && m_dedicatedKeys.count(keycode) == 0 )
     {
         // Only propagate event if it had modifiers
         if ( !event.HasModifiers() )
@@ -6080,7 +6074,7 @@ wxPGEditor* wxPropertyGrid::DoRegisterEditorClass( wxPGEditor* editorClass,
     wxString name = editorName.empty() ? editorClass->GetName() : editorName;
 
     // Existing editor under this name?
-    wxPGHashMapS2P::iterator vt_it = wxPGGlobalVars->m_mapEditorClasses.find(name);
+    auto vt_it = wxPGGlobalVars->m_mapEditorClasses.find(name);
 
     if ( vt_it != wxPGGlobalVars->m_mapEditorClasses.end() )
     {
@@ -6090,10 +6084,10 @@ wxPGEditor* wxPropertyGrid::DoRegisterEditorClass( wxPGEditor* editorClass,
     }
 
     wxCHECK_MSG( vt_it == wxPGGlobalVars->m_mapEditorClasses.end(),
-                 (wxPGEditor*) vt_it->second,
+                 vt_it->second,
                  wxS("Editor with given name was already registered") );
 
-    wxPGGlobalVars->m_mapEditorClasses[name] = (void*)editorClass;
+    wxPGGlobalVars->m_mapEditorClasses[name] = editorClass;
 
     return editorClass;
 }
@@ -6195,61 +6189,6 @@ wxString wxPGStringTokenizer::GetNextToken()
 }
 
 // -----------------------------------------------------------------------
-// wxPGChoiceEntry
-// -----------------------------------------------------------------------
-
-wxPGChoiceEntry::wxPGChoiceEntry()
-    : wxPGCell(), m_value(wxPG_INVALID_VALUE)
-{
-}
-
-// -----------------------------------------------------------------------
-// wxPGChoicesData
-// -----------------------------------------------------------------------
-
-wxPGChoicesData::~wxPGChoicesData()
-{
-    Clear();
-}
-
-void wxPGChoicesData::Clear()
-{
-    m_items.clear();
-}
-
-void wxPGChoicesData::CopyDataFrom( wxPGChoicesData* data )
-{
-    wxASSERT( m_items.empty() );
-
-    m_items = data->m_items;
-}
-
-wxPGChoiceEntry& wxPGChoicesData::Insert( int index,
-                                          const wxPGChoiceEntry& item )
-{
-    wxVector<wxPGChoiceEntry>::iterator it;
-    if ( index == -1 )
-    {
-        it = m_items.end();
-        index = (int) m_items.size();
-    }
-    else
-    {
-        it = m_items.begin() + index;
-    }
-
-    m_items.insert(it, item);
-
-    wxPGChoiceEntry& ownEntry = m_items[index];
-
-    // Need to fix value?
-    if ( ownEntry.GetValue() == wxPG_INVALID_VALUE )
-        ownEntry.SetValue(index);
-
-    return ownEntry;
-}
-
-// -----------------------------------------------------------------------
 // wxPropertyGridEvent
 // -----------------------------------------------------------------------
 
@@ -6326,9 +6265,9 @@ wxPropertyGridEvent::~wxPropertyGridEvent()
 
         // Use iterate from the back since it is more likely that the event
         // being destroyed is at the end of the array.
-        wxVector<wxPropertyGridEvent*>& liveEvents = m_pg->m_liveEvents;
+        std::vector<wxPropertyGridEvent*>& liveEvents = m_pg->m_liveEvents;
 
-        for ( wxVector<wxPropertyGridEvent*>::reverse_iterator rit = liveEvents.rbegin(); rit != liveEvents.rend(); ++rit )
+        for ( std::vector<wxPropertyGridEvent*>::reverse_iterator rit = liveEvents.rbegin(); rit != liveEvents.rend(); ++rit )
         {
             if ( *rit == this )
             {
@@ -6382,7 +6321,7 @@ wxPropertyGridPopulator::~wxPropertyGridPopulator()
     // Free unused sets of choices
     for( const auto& it : m_dictIdChoices )
     {
-        static_cast<wxPGChoicesData*>(it.second)->DecRef();
+        it.second->DecRef();
     }
 
     if ( m_pg )
@@ -6447,98 +6386,93 @@ void wxPropertyGridPopulator::AddChildren( wxPGProperty* property )
 wxPGChoices wxPropertyGridPopulator::ParseChoices( const wxString& choicesString,
                                                    const wxString& idString )
 {
-    wxPGChoices choices;
-
     // Using id?
     if ( choicesString[0] == wxT('@') )
     {
         wxString ids = choicesString.substr(1);
-        wxPGHashMapS2P::iterator it = m_dictIdChoices.find(ids);
+        auto it = m_dictIdChoices.find(ids);
         if ( it == m_dictIdChoices.end() )
-            ProcessError(wxString::Format(wxS("No choices defined for id '%s'"),ids));
-        else
-            choices.AssignData((wxPGChoicesData*)it->second);
+        {
+            ProcessError(wxString::Format(wxS("No choices defined for id '%s'"), ids));
+            return wxPGChoices();
+        }
+
+        return wxPGChoices(it->second);
     }
-    else
+
+    if ( !idString.empty() )
     {
-        bool found = false;
-        if ( !idString.empty() )
+        auto it = m_dictIdChoices.find(idString);
+        if ( it != m_dictIdChoices.end() )
         {
-            wxPGHashMapS2P::iterator it = m_dictIdChoices.find(idString);
-            if ( it != m_dictIdChoices.end() )
-            {
-                choices.AssignData((wxPGChoicesData*)it->second);
-                found = true;
-            }
-        }
-
-        if ( !found )
-        {
-            // Parse choices string
-            wxString label;
-            wxString value;
-            int state = 0;
-            bool labelValid = false;
-
-            for ( wxUniChar c : choicesString )
-            {
-                if ( state != 1 )
-                {
-                    if ( c == wxS('"') )
-                    {
-                        if ( labelValid )
-                        {
-                            long l;
-                            if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
-                            choices.Add(label, l);
-                        }
-                        labelValid = false;
-                        //wxLogDebug(wxS("%s, %s"),label,value);
-                        value.clear();
-                        label.clear();
-                        state = 1;
-                    }
-                    else if ( c == wxS('=') )
-                    {
-                        if ( labelValid )
-                        {
-                            state = 2;
-                        }
-                    }
-                    else if ( state == 2 && (wxIsalnum(c) || c == wxS('x')) )
-                    {
-                        value << c;
-                    }
-                }
-                else
-                {
-                    if ( c == wxS('"') )
-                    {
-                        state = 0;
-                        labelValid = true;
-                    }
-                    else
-                        label << c;
-                }
-            }
-
-            if ( labelValid )
-            {
-                long l;
-                if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
-                choices.Add(label, l);
-            }
-
-            if ( !choices.IsOk() )
-            {
-                choices.EnsureData();
-            }
-
-            // Assign to id
-            if ( !idString.empty() )
-                m_dictIdChoices[idString] = choices.GetData();
+            return wxPGChoices(it->second);
         }
     }
+
+    // Parse choices string
+    wxPGChoices choices;
+    wxString label;
+    wxString value;
+    int state = 0;
+    bool labelValid = false;
+
+    for ( wxUniChar c : choicesString )
+    {
+        if ( state != 1 )
+        {
+            if ( c == wxS('"') )
+            {
+                if ( labelValid )
+                {
+                    long l;
+                    if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
+                    choices.Add(label, l);
+                }
+                labelValid = false;
+                //wxLogDebug(wxS("%s, %s"),label,value);
+                value.clear();
+                label.clear();
+                state = 1;
+            }
+            else if ( c == wxS('=') )
+            {
+                if ( labelValid )
+                {
+                    state = 2;
+                }
+            }
+            else if ( state == 2 && (wxIsalnum(c) || c == wxS('x')) )
+            {
+                value << c;
+            }
+        }
+        else
+        {
+            if ( c == wxS('"') )
+            {
+                state = 0;
+                labelValid = true;
+            }
+            else
+                label << c;
+        }
+    }
+
+    if ( labelValid )
+    {
+        long l;
+        if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
+        choices.Add(label, l);
+    }
+
+    if ( !choices.IsOk() )
+    {
+        choices.EnsureData();
+    }
+
+    // Assign to id
+    if ( !idString.empty() )
+        m_dictIdChoices[idString] = choices.GetData();
 
     return choices;
 }

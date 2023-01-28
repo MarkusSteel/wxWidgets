@@ -319,6 +319,7 @@ wxColour GetColour(wxSystemColour index)
         case wxSYS_COLOUR_MENUHILIGHT:
             return wxColour(0x353535);
 
+        case wxSYS_COLOUR_BTNHIGHLIGHT:
         case wxSYS_COLOUR_HIGHLIGHT:
             return wxColour(0x777777);
 
@@ -328,7 +329,6 @@ wxColour GetColour(wxSystemColour index)
         case wxSYS_COLOUR_3DDKSHADOW:
         case wxSYS_COLOUR_3DLIGHT:
         case wxSYS_COLOUR_ACTIVEBORDER:
-        case wxSYS_COLOUR_BTNHIGHLIGHT:
         case wxSYS_COLOUR_DESKTOP:
         case wxSYS_COLOUR_GRADIENTACTIVECAPTION:
         case wxSYS_COLOUR_GRADIENTINACTIVECAPTION:
@@ -351,6 +351,35 @@ HBRUSH GetBackgroundBrush()
         wxTheBrushList->FindOrCreateBrush(GetColour(wxSYS_COLOUR_WINDOW));
 
     return brush ? GetHbrushOf(*brush) : 0;
+}
+
+wxBitmap InvertBitmap(const wxBitmap& bmp)
+{
+#if wxUSE_IMAGE
+    wxImage image = bmp.ConvertToImage();
+
+    unsigned char *data = image.GetData();
+    const int len = image.GetWidth()*image.GetHeight();
+    for ( int i = 0; i < len; ++i, data += 3 )
+    {
+        wxImage::RGBValue rgb(data[0], data[1], data[2]);
+        wxImage::HSVValue hsv = wxImage::RGBtoHSV(rgb);
+
+        // There is no really good way to convert normal colours to dark mode,
+        // but try to do a bit better than just inverting the value because
+        // this results in colours which are much too dark.
+        hsv.value = sqrt(1.0 - hsv.value*hsv.value);
+
+        rgb = wxImage::HSVtoRGB(hsv);
+        data[0] = rgb.red;
+        data[1] = rgb.green;
+        data[2] = rgb.blue;
+    }
+
+    return wxBitmap(image);
+#else // !wxUSE_IMAGE
+    return wxBitmap();
+#endif // wxUSE_IMAGE/!wxUSE_IMAGE
 }
 
 bool PaintIfNecessary(HWND hwnd, WXWNDPROC defWndProc)
@@ -378,28 +407,9 @@ bool PaintIfNecessary(HWND hwnd, WXWNDPROC defWndProc)
             ::DefWindowProc(hwnd, WM_PAINT, wparam, 0);
     }
 
-    wxImage image = bmp.ConvertToImage();
-
-    unsigned char *data = image.GetData();
-    for ( int i = 0; i < size.x*size.y; ++i, data += 3 )
-    {
-        wxImage::RGBValue rgb(data[0], data[1], data[2]);
-        wxImage::HSVValue hsv = wxImage::RGBtoHSV(rgb);
-
-        // There is no really good way to convert normal colours to dark mode,
-        // but try to do a bit better than just inverting the value because
-        // this results in colours which are much too dark.
-        hsv.value = sqrt(1.0 - hsv.value*hsv.value);
-
-        rgb = wxImage::HSVtoRGB(hsv);
-        data[0] = rgb.red;
-        data[1] = rgb.green;
-        data[2] = rgb.blue;
-    }
-
     PAINTSTRUCT ps;
     wxDCTemp dc(::BeginPaint(hwnd, &ps), size);
-    dc.DrawBitmap(wxBitmap(image), 0, 0);
+    dc.DrawBitmap(InvertBitmap(bmp), 0, 0);
     ::EndPaint(hwnd, &ps);
 
     return true;
@@ -647,6 +657,11 @@ wxColour GetColour(wxSystemColour WXUNUSED(index))
 HBRUSH GetBackgroundBrush()
 {
     return 0;
+}
+
+wxBitmap InvertBitmap(const wxBitmap& WXUNUSED(bmp))
+{
+    return wxBitmap();
 }
 
 bool PaintIfNecessary(HWND WXUNUSED(hwnd), WXWNDPROC WXUNUSED(defWndProc))
