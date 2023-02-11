@@ -98,7 +98,7 @@ enum
 class FormMain : public wxFrame
 {
 public:
-    FormMain(const wxString& title, const wxPoint& pos, const wxSize& size );
+    FormMain(const wxString& title);
     ~FormMain();
 
     wxPropertyGridManager*  m_pPropGridManager;
@@ -232,8 +232,6 @@ public:
     void OnShowPopup( wxCommandEvent& event );
 
     void AddTestProperties( wxPropertyGridPage* pg );
-
-    bool RunTests( bool fullTest, bool interactive = false );
 
 private:
     wxDECLARE_EVENT_TABLE();

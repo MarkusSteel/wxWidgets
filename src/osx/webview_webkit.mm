@@ -653,7 +653,9 @@ void wxWebViewWebKit::RegisterHandler(wxSharedPtr<wxWebViewHandler> handler)
 - (void)doCommandBySelector:(SEL)aSelector
 {
     wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( self );
-    if (impl)
+    if (aSelector != @selector(noop:))
+        [super doCommandBySelector:aSelector];
+    else if (impl)
         impl->doCommandBySelector(aSelector, self, _cmd);
 }
 
@@ -848,6 +850,9 @@ wxString nsErrorToWxHtmlError(NSError* error, wxWebViewNavigationError* out)
     wxWebViewEvent event(wxEVT_WEBVIEW_NAVIGATING,
                          webKitWindow->GetId(),
                          wxCFStringRef::AsString( url ), "", navFlags);
+
+    if (navigationAction.targetFrame && navigationAction.targetFrame.isMainFrame)
+        event.SetInt(1);
 
     if (webKitWindow && webKitWindow->GetEventHandler())
         webKitWindow->GetEventHandler()->ProcessEvent(event);

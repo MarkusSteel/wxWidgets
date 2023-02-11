@@ -138,6 +138,9 @@ const char wxPropertyGridNameStr[] = "wxPropertyGrid";
 // Statics in one class for easy destruction.
 // -----------------------------------------------------------------------
 
+// This is the real global wxPGGlobalVarsClass object allocated on demand.
+static wxPGGlobalVarsClass* g_PGGlobalVars = nullptr;
+
 #include "wx/module.h"
 
 class wxPGGlobalVarsClassManager : public wxModule
@@ -145,8 +148,8 @@ class wxPGGlobalVarsClassManager : public wxModule
     wxDECLARE_DYNAMIC_CLASS(wxPGGlobalVarsClassManager);
 public:
     wxPGGlobalVarsClassManager() = default;
-    virtual bool OnInit() override { wxPGGlobalVars = new wxPGGlobalVarsClass(); return true; }
-    virtual void OnExit() override { wxDELETE(wxPGGlobalVars); }
+    virtual bool OnInit() override { return true; }
+    virtual void OnExit() override { wxDELETE(g_PGGlobalVars); }
 };
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxPGGlobalVarsClassManager, wxModule);
@@ -161,13 +164,25 @@ void wxPGInitResourceModule()
     wxModule::InitializeModules();
 }
 
-wxPGGlobalVarsClass* wxPGGlobalVars = nullptr;
+// This object is a proxy that allows us to only create wxPGGlobalVarsClass
+// object when it's really needed. Note that we need to use an object for this
+// instead of a function for compatibility reasons: a lot of existing code uses
+// wxPGGlobalVars directly.
+wxPGGlobalVarsPtr wxPGGlobalVars;
 
+wxPGGlobalVarsClass* wxPGGlobalVarsPtr::operator->() const
+{
+    if ( !g_PGGlobalVars )
+        g_PGGlobalVars = new wxPGGlobalVarsClass();
+
+    return g_PGGlobalVars;
+}
 
 wxPGGlobalVarsClass::wxPGGlobalVarsClass()
-    // Prepare some shared variants
     : m_fontFamilyChoices(nullptr)
     , m_defaultRenderer(new wxPGDefaultRenderer())
+#if WXWIN_COMPATIBILITY_3_2
+    // Prepare some shared variants
     , m_vEmptyString(wxString())
     , m_vZero(0L)
     , m_vMinusOne(-1L)
@@ -183,12 +198,15 @@ wxPGGlobalVarsClass::wxPGGlobalVarsClass()
     , m_strMax(wxS("Max"))
     , m_strUnits(wxS("Units"))
     , m_strHint(wxS("Hint"))
+#endif // WXWIN_COMPATIBILITY_3_2
     , m_autoGetTranslation(false)
     , m_offline(0)
     , m_extraStyle(0)
     , m_warnings(0)
 {
-    wxPGProperty::sm_wxPG_LABEL = new wxString(wxPG_LABEL_STRING);
+#if WXWIN_COMPATIBILITY_3_2
+    wxPGProperty::sm_wxPG_LABEL = new wxString("@!");
+#endif // WXWIN_COMPATIBILITY_3_2
 
     /* TRANSLATORS: Name of Boolean false value */
     m_boolChoices.Add(_("False"));
@@ -222,7 +240,9 @@ wxPGGlobalVarsClass::~wxPGGlobalVarsClass()
     wxASSERT(wxPG_EDITOR(TextCtrl) == nullptr);
     wxASSERT(wxPG_EDITOR(ChoiceAndButton) == nullptr);
 
+#if WXWIN_COMPATIBILITY_3_2
     delete wxPGProperty::sm_wxPG_LABEL;
+#endif // WXWIN_COMPATIBILITY_3_2
 }
 
 void wxPropertyGridInitGlobalsIfNeeded()
