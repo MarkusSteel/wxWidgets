@@ -29,7 +29,6 @@
     #include "wx/intl.h"
     #include "wx/log.h"
     #include "wx/utils.h"
-    #include "wx/hashmap.h"
     #include "wx/module.h"
 #endif // WX_PRECOMP
 
@@ -45,7 +44,6 @@
 #include "wx/fontmap.h"
 #include "wx/stdpaths.h"
 #include "wx/version.h"
-#include "wx/private/threadinfo.h"
 #include "wx/uilocale.h"
 
 #ifdef __WINDOWS__
@@ -56,6 +54,7 @@
 #endif
 
 #include <memory>
+#include <unordered_set>
 
 // ----------------------------------------------------------------------------
 // simple types
@@ -869,7 +868,7 @@ public:
                   wxPluralFormsCalculatorPtr& rPluralFormsCalculator);
 
     // fills the hash with string-translation pairs
-    bool FillHash(wxStringToStringHashMap& hash, const wxString& domain) const;
+    bool FillHash(wxTranslationsHashMap& hash, const wxString& domain) const;
 
     // return the charset of the strings in this catalog or empty string if
     // none/unknown
@@ -1077,7 +1076,7 @@ bool wxMsgCatalogFile::LoadData(const DataBuffer& data,
     return true;
 }
 
-bool wxMsgCatalogFile::FillHash(wxStringToStringHashMap& hash,
+bool wxMsgCatalogFile::FillHash(wxTranslationsHashMap& hash,
                                 const wxString& domain) const
 {
     wxUnusedVar(domain); // silence warning in Unicode build
@@ -1195,7 +1194,7 @@ const wxString *wxMsgCatalog::GetString(const wxString& str, unsigned n, const w
     {
         index = m_pluralFormsCalculator->evaluate(n);
     }
-    wxStringToStringHashMap::const_iterator i;
+    wxTranslationsHashMap::const_iterator i;
     if (index != 0)
     {
         if (context.IsEmpty())
@@ -1451,13 +1450,8 @@ wxString wxTranslations::GetBestTranslation(const wxString& domain,
 /* static */
 const wxString& wxTranslations::GetUntranslatedString(const wxString& str)
 {
-    wxLocaleUntranslatedStrings& strings = wxThreadInfo.untranslatedStrings;
-
-    wxLocaleUntranslatedStrings::iterator i = strings.find(str);
-    if ( i == strings.end() )
-        return *strings.insert(str).first;
-
-    return *i;
+    thread_local std::unordered_set<wxString> wxPerThreadStrings;
+    return *wxPerThreadStrings.insert(str).first;
 }
 
 
